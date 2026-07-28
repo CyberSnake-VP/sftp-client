@@ -54,6 +54,8 @@ public class SftpClient {
 
     // Отправляем поток для записи
     public void uploadFile(InputStream inputStream, String path) throws SftpException {
-        channel.put(inputStream, path);
+        String tmp = path + ".tmp";   // в случае проблем во время записи, мы не сломаем файл на сервере
+        channel.put(inputStream, tmp);
+        channel.rename(tmp, path);
     }
 }

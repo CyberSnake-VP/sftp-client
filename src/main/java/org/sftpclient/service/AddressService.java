@@ -18,8 +18,7 @@ import java.util.Locale;
 /// Класс-сервис для работы sftp клиентом, работа с Json адресами
 public class AddressService {
     private final SftpClient client;
-    private List<Address> addresses;
-    private AddressValidator addressValidator;
+    private final AddressValidator addressValidator;
     private final static String ADDRESS_FILE = "upload/addresses.json";
 
 
@@ -28,17 +27,9 @@ public class AddressService {
         this.addressValidator = addressValidator;
     }
 
-    // Метод для получения списка адресов.
-    private List<Address> getAddressesStorage() throws IOException, SftpException {
-        // Делаем ленивую загрузки, если список скачен, используем его
-        if (addresses == null) {
-            addresses = loadAddresses();
-        }
-        return addresses;
-    }
     // Отдаем наш список адресов наружу, использует класс ConsoleMenu
     public List<Address> getAddresses() throws IOException, SftpException {
-        return Collections.unmodifiableList(getAddressesStorage());
+        return Collections.unmodifiableList(loadAddresses());
     }
 
     private List<Address> loadAddresses() throws IOException, SftpException {
@@ -58,10 +49,11 @@ public class AddressService {
 
     /// Ищем адрес, получаем его ip
     public String findIpByDomain(String domain) throws IOException, SftpException {
-        return getAddressesStorage()
+        String normalizedDomain = domain.trim().toLowerCase(Locale.ROOT);
+        return loadAddresses()
                 .stream()
                 .filter(address ->
-                        domain.equals(address.getDomain()))
+                        normalizedDomain.equals(address.getDomain()))
                 .map(Address::getIp)
                 .findFirst()
                 .orElse(null);
@@ -69,10 +61,16 @@ public class AddressService {
 
     /// Ищем адрес и получаем его домен
     public String findDomainByIp(String ip) throws IOException, SftpException {
-        return getAddressesStorage()
+        if (ip == null || ip.trim().isEmpty()) {
+            return null;
+        }
+
+        String normalizedIp = ip.trim();
+
+        return loadAddresses()
                 .stream()
                 .filter(address ->
-                        ip.equals(address.getIp()))
+                        normalizedIp.equals(address.getIp()))
                 .map(Address::getDomain)
                 .findFirst()
                 .orElse(null);
@@ -82,7 +80,7 @@ public class AddressService {
         domain = domain.trim().toLowerCase(Locale.ROOT);
         ip = ip.trim();
 
-        List<Address> addresses = getAddressesStorage();
+        List<Address> addresses = loadAddresses();
         Address address = new Address(domain, ip);
 
         // Валидируем адрес
@@ -115,7 +113,7 @@ public class AddressService {
         if (value == null || value.trim().isEmpty()) {
             return new ValidationResult(false, "Value cannot be empty");
         }
-        List<Address> addresses = getAddressesStorage();
+        List<Address> addresses = loadAddresses();
 
         // Приводим к одному стилю, плюс используем локаль для системы
         String normalizedValue = value.trim().toLowerCase(Locale.ROOT);
