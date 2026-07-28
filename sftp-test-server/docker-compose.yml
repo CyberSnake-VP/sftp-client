@@ -1,0 +1,12 @@
+services:
+  sftp:
+    image: atmoz/sftp
+    container_name: test-sftp-server
+    ports:
+      - "2222:22"
+    volumes:
+      - ./data:/home/user/upload # Кладем файлы внутри контейнера по этому пути
+    command: user:pass:1001
+    # login: user
+    # password: pass
+    # sftp -P 2222 user@localhost
