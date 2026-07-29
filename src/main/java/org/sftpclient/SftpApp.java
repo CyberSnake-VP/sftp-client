@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.Scanner;
 
 /// Класс оркестратор, создает и управляет вызовами. Обработка ошибок.
-public class Main {
+public class SftpApp {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -26,7 +26,7 @@ public class Main {
         // Валидатор адресов
         AddressValidator addressValidator = new AddressValidator();
         // Создаем сервис для работы с адресами
-        AddressService addressService = new AddressService(client, addressValidator);
+        AddressService addressService = new AddressService(client, addressValidator, "upload/addresses.json");
         // Создаем меню
         ConsoleMenu menu = new ConsoleMenu(scanner, addressService);
 

@@ -19,12 +19,13 @@ import java.util.Locale;
 public class AddressService {
     private final SftpClient client;
     private final AddressValidator addressValidator;
-    private final static String ADDRESS_FILE = "upload/addresses.json";
+    private final String addressPath;
 
 
-    public AddressService(SftpClient client, AddressValidator addressValidator) {
+    public AddressService(SftpClient client, AddressValidator addressValidator, String addressPath) {
         this.client = client;
         this.addressValidator = addressValidator;
+        this.addressPath = addressPath;
     }
 
     // Отдаем наш список адресов наружу, использует класс ConsoleMenu
@@ -34,7 +35,7 @@ public class AddressService {
 
     private List<Address> loadAddresses() throws IOException, SftpException {
         // Получаем поток
-        try (InputStream inputStream = client.downloadFile(ADDRESS_FILE);
+        try (InputStream inputStream = client.downloadFile(addressPath);
              Reader reader = new InputStreamReader(inputStream)) {
             // Преобразовать JSON в AddressFile
             Gson gson = new Gson();
@@ -49,6 +50,10 @@ public class AddressService {
 
     /// Ищем адрес, получаем его ip
     public String findIpByDomain(String domain) throws IOException, SftpException {
+        if(domain == null || domain.trim().isEmpty()) {
+            return null;
+        }
+
         String normalizedDomain = domain.trim().toLowerCase(Locale.ROOT);
         return loadAddresses()
                 .stream()
@@ -105,7 +110,7 @@ public class AddressService {
         try (InputStream inputStream = new ByteArrayInputStream(
                 json.getBytes(StandardCharsets.UTF_8))) {
 
-            client.uploadFile(inputStream, ADDRESS_FILE);
+            client.uploadFile(inputStream, addressPath);
         }
     }
 
